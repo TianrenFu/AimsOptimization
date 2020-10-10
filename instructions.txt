@@ -1,0 +1,65 @@
+Tianren, 2020, LV lab, CPN lab, Columbia
+
+To run "relax.py", you need to run under a directory that contains these 3 files:
+    a. control.in
+    b. geometry.in
+    c. constraints.in (optional)
+The a. and b. are the corresponding files required by AIMS. The instruction on how to construct a
+"constraints.in" file specifying customized constraints is in the later part of this document. After
+preparing these files, you may run this script by doing "python3 relax.py | tee log.txt".
+
+This script requires "scipy" package with version >= 1.4 . Thus, we highly recommend you to run this
+with Anaconda 3 of python 3.8 .
+
+Before running this script, you may need to tell it how to call AIMS by modifying the "run_aims_cmd"
+variable in the script (in line 9). A sample is "/opt/fhi-aims/bin/aims.serial.x > aims.dft.out 2>&1".
+When putting your customized command here, you need to make sure that the output of AIMS is directed
+to a file named "aims.dft.out", because this script looks for information in this file. The ">" flow
+and "2>&1" descriptor are highly recommended, so that the outflow of AIMS and this script will not
+mix together.
+
+When the relaxation is running, you can stop it by creating a file named "abort_opt" in the working
+directory. By doing this, the relaxation can quit properly.
+
+
+-->  In the "constraints.in" file:
+
+1.  Each line is a command, and it is always in this format:
+    keyword  atom_number(s)  [argument(s)]
+
+2.  Arguments are specified in the format of [sign]number, such as "=0", "<90" or ">1.5", etc.
+    a. Only "=", "<" and ">" are allowed. If no sign in provided, by default it will be an "=".
+    b. There should be no space between the sign and number in an argument.
+    c. You can use two arguments to define a range, like ">60 <70".
+    d. If a keyword asks for arguments but no argument is provided, it will be set to be equal to what
+       it is in the geometry defined in the "geometry.in".
+
+3.  Keyword "fix" tells the program to avoid any movement of an atom during the relaxation.
+    - "fix" takes 1 atom number. It is the atom to fix.
+    - "fix" does not take arguments.
+
+4.  Keyword "x" tells the program to constrain an atom's movement on the x axis.
+    - "x" takes 1 atom number. It is the atom to be confined on the x axis.
+    - "x" takes arguments in Angstroms.
+    Keyword "y" and "z" have the same grammar as "x".
+
+5.  Keyword "bond" tells the program to confine the distance between two atoms.
+    - "bond" takes 2 atom numbers. They are the atoms between which the distance is defined.
+    - "bond" takes arguments in Angstroms.
+
+6.  Keyword "angle" tells the program to confine the angle between three atoms.
+    - "angle" takes 3 atom numbers. The 2nd atom is the center point of the angle. And, the 1st one
+      and the 3rd one are on the two edges of the angle defined.
+    - "angle" takes arguments in degrees.
+    - The range of this keyword is [0, 180] degrees.
+
+7.  Keyword "dihedral" tells the program to confine the dihedral between two planes.
+    - "dihedral" takes 4 atom numbers. Atom 1, 2 and 3 defines one plane, and atom 2, 3 and 4 defines
+      the other plane. The dihedral is defined by these two planes. Notice that atom 2 and 3 defines
+      the hinge line of the dihedral.
+    - "dihedral" takes arguments in degrees.
+    - Try not to pass arguments to this keyword, or make sure you are providing a correct sign. If
+      you have "Jmol", its definition of sign of dihedral is the same as this script and thus can be
+      a reference here.
+    - If arguments are provided, you need to provide both ends of the range, which means asking it
+      to equal to or to be between something. This is due to there is no natural ends for dihedral.
